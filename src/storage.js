@@ -40,14 +40,19 @@ function saveEntries(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
 
-/** Normalize a comma-separated tags string into a clean array of lowercase tags. */
+/** De-dupe a tag array case-insensitively, preserving first-seen casing and order. */
+function dedupeTags(tags) {
+  return tags.filter((t, i, arr) => arr.findIndex((o) => o.toLowerCase() === t.toLowerCase()) === i);
+}
+
+/** Normalize a comma-separated tags string into a clean, de-duped array of tags. */
 export function parseTags(tagsString) {
-  return (tagsString || '')
-    .split(',')
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0)
-    // de-dupe case-insensitively while preserving first-seen casing
-    .filter((t, i, arr) => arr.findIndex((o) => o.toLowerCase() === t.toLowerCase()) === i);
+  return dedupeTags(
+    (tagsString || '')
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0)
+  );
 }
 
 /**
@@ -104,4 +109,114 @@ export function getAllTags() {
     for (const tag of entry.tags || []) tagSet.add(tag);
   }
   return [...tagSet].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * Rename a tag across every entry that has it (case-insensitive match on
+ * oldTag). If the new name collides with a tag an entry already has, the
+ * duplicate collapses rather than producing two copies of the same tag.
+ */
+export function renameTag(oldTag, newTag) {
+  const trimmedNew = (newTag || '').trim();
+  if (!trimmedNew) return;
+  const entries = getEntries();
+  for (const entry of entries) {
+    if (!entry.tags || entry.tags.length === 0) continue;
+    if (!entry.tags.some((t) => t.toLowerCase() === oldTag.toLowerCase())) continue;
+    entry.tags = dedupeTags(
+      entry.tags.map((t) => (t.toLowerCase() === oldTag.toLowerCase() ? trimmedNew : t))
+    );
+  }
+  saveEntries(entries);
+}
+
+/** Remove a tag (case-insensitive) from every entry that has it. Entries themselves are untouched otherwise. */
+export function deleteTag(tag) {
+  const entries = getEntries();
+  for (const entry of entries) {
+    if (!entry.tags || entry.tags.length === 0) continue;
+    entry.tags = entry.tags.filter((t) => t.toLowerCase() !== tag.toLowerCase());
+  }
+  saveEntries(entries);
+}
+
+/** Build a JSON-serializable snapshot of all entries for download/backup. */
+export function exportEntries() {
+  return {
+    format: 'digital-lab-notebook-export',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    entries: getEntries(),
+  };
+}
+
+function isValidImportedEntry(e) {
+  return (
+    e &&
+    typeof e === 'object' &&
+    typeof e.title === 'string' &&
+    e.title.trim().length > 0 &&
+    typeof e.date === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(e.date)
+  );
+}
+
+/**
+ * Import entries from a previously exported JSON string. Accepts either the
+ * wrapped `{ entries: [...] }` export format or a bare array. Entries that
+ * already exist (matched by id) are skipped rather than duplicated, so
+ * re-importing the same backup file is safe. Malformed entries (missing
+ * title/date) are skipped and counted, not thrown.
+ *
+ * @param {string} jsonText
+ * @returns {{added: number, skipped: number}}
+ * @throws {Error} if jsonText is not valid JSON or not a recognizable export shape
+ */
+export function importEntries(jsonText) {
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (err) {
+    throw new Error('That file is not valid JSON.');
+  }
+
+  const incoming = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.entries)
+      ? parsed.entries
+      : null;
+
+  if (!incoming) {
+    throw new Error('That file does not look like a Digital Lab Notebook export (expected an array of entries).');
+  }
+
+  const entries = getEntries();
+  const existingIds = new Set(entries.map((e) => e.id));
+  let added = 0;
+  let skipped = 0;
+
+  for (const raw of incoming) {
+    if (!isValidImportedEntry(raw)) {
+      skipped++;
+      continue;
+    }
+    if (raw.id && existingIds.has(raw.id)) {
+      skipped++; // already present -- treat as a duplicate from a repeat import
+      continue;
+    }
+    const id = raw.id && !existingIds.has(raw.id) ? raw.id : generateId();
+    existingIds.add(id);
+    entries.push({
+      id,
+      title: raw.title.trim(),
+      date: raw.date,
+      notes: typeof raw.notes === 'string' ? raw.notes : '',
+      tags: Array.isArray(raw.tags) ? dedupeTags(raw.tags.filter((t) => typeof t === 'string' && t.trim())) : [],
+      createdAt: typeof raw.createdAt === 'number' ? raw.createdAt : Date.now(),
+    });
+    added++;
+  }
+
+  saveEntries(entries);
+  return { added, skipped };
 }

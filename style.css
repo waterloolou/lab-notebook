@@ -39,6 +39,12 @@ body {
   font-size: 1.25rem;
 }
 
+#header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 #new-entry-btn,
 #entry-save-btn {
   background: var(--accent);
@@ -53,6 +59,23 @@ body {
 #new-entry-btn:hover,
 #entry-save-btn:hover {
   background: var(--accent-hover);
+}
+
+#export-btn,
+#import-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+#export-btn:hover,
+#import-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 #app-main {
@@ -77,10 +100,46 @@ body {
   font-size: 0.95rem;
 }
 
+#sort-select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  background: var(--panel-bg);
+  color: var(--text);
+}
+
 #tag-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.tag-filter-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.tag-action-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  border-radius: 999px;
+}
+
+.tag-action-btn:hover {
+  background: var(--tag-bg);
+  color: var(--text);
+}
+
+.tag-action-btn.tag-action-danger:hover {
+  background: var(--danger);
+  color: #fff;
 }
 
 .tag-chip {
@@ -113,6 +172,12 @@ body {
   font-size: 0.82rem;
   cursor: pointer;
   color: var(--text-muted);
+}
+
+#entry-count {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin: -0.5rem 0 0.75rem;
 }
 
 #empty-state,
@@ -236,6 +301,22 @@ body {
   cursor: pointer;
 }
 
+#entry-print-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 0.55rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+#entry-print-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 #entry-delete-btn {
   background: none;
   border: 1px solid var(--danger);
@@ -244,6 +325,11 @@ body {
   padding: 0.55rem 1rem;
   font-size: 0.95rem;
   cursor: pointer;
+}
+
+/* When the print button is hidden (new-entry form), delete has no sibling
+   pushing it right, so it needs to claim the auto margin itself. */
+#entry-print-btn.hidden + #entry-delete-btn {
   margin-left: auto;
 }
 
@@ -266,5 +352,68 @@ body {
     --accent: #4c9a72;
     --accent-hover: #5cae82;
     --tag-bg: #33362f;
+  }
+}
+
+/* ---- Print ---- */
+
+#print-pane {
+  display: none;
+}
+
+@media print {
+  /* Printing a single entry (via the "Print" button in the edit form):
+     hide the whole app shell and show only the populated print pane. */
+  body.printing-entry #app-header,
+  body.printing-entry #app-main,
+  body.printing-entry #entry-form-overlay {
+    display: none !important;
+  }
+
+  body.printing-entry #print-pane {
+    display: block !important;
+  }
+
+  /* Printing straight from the list view (e.g. Ctrl+P with no entry open):
+     hide controls that don't make sense on paper, keep the entries. */
+  body:not(.printing-entry) #header-actions,
+  body:not(.printing-entry) #toolbar,
+  body:not(.printing-entry) #entry-form-overlay,
+  body:not(.printing-entry) #print-pane {
+    display: none !important;
+  }
+
+  body:not(.printing-entry) .entry-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #999;
+  }
+
+  body:not(.printing-entry) .entry-notes {
+    -webkit-line-clamp: unset;
+    display: block;
+  }
+
+  #print-pane h1 {
+    margin-bottom: 0.2rem;
+  }
+
+  #print-pane .print-date {
+    color: #444;
+    margin-top: 0;
+  }
+
+  #print-pane .print-notes {
+    white-space: pre-wrap;
+    font-family: inherit;
+    border: none;
+    padding: 0;
+    margin-top: 1rem;
+  }
+
+  #print-pane .print-footer {
+    margin-top: 2rem;
+    color: #777;
+    font-size: 0.8rem;
   }
 }

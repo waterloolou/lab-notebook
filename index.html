@@ -11,15 +11,27 @@
 
 <header id="app-header">
   <h1>Digital Lab Notebook</h1>
-  <button id="new-entry-btn">+ New Entry</button>
+  <div id="header-actions">
+    <button id="export-btn" title="Download all entries as a JSON backup file">Export</button>
+    <button id="import-btn" title="Restore entries from a previously exported JSON file">Import</button>
+    <input id="import-file-input" type="file" accept="application/json" class="hidden" />
+    <button id="new-entry-btn">+ New Entry</button>
+  </div>
 </header>
 
 <main id="app-main">
   <section id="toolbar">
     <input id="search-input" type="text" placeholder="Search titles and notes&hellip;" autocomplete="off" aria-label="Search entries" />
+    <select id="sort-select" aria-label="Sort entries">
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+      <option value="title-asc">Title A&ndash;Z</option>
+    </select>
     <div id="tag-filters" aria-label="Filter by tag"></div>
     <button id="clear-filters-btn" class="hidden">Clear filters</button>
   </section>
+
+  <div id="entry-count"></div>
 
   <section id="entry-list" aria-live="polite">
     <p id="empty-state" class="hidden">No entries yet. Click &ldquo;+ New Entry&rdquo; to log your first observation.</p>
@@ -46,10 +58,13 @@
     <div id="entry-form-actions">
       <button type="submit" id="entry-save-btn">Save Entry</button>
       <button type="button" id="entry-cancel-btn">Cancel</button>
+      <button type="button" id="entry-print-btn" class="hidden">Print</button>
       <button type="button" id="entry-delete-btn" class="hidden danger">Delete</button>
     </div>
   </form>
 </div>
+
+<div id="print-pane"></div>
 
 <script type="module" src="src/main.js"></script>
 </body>
