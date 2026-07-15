@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Digital Lab Notebook</title>
+<meta name="description" content="A lightweight electronic lab notebook for logging biology experiments and observations." />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header id="app-header">
+  <h1>Digital Lab Notebook</h1>
+  <button id="new-entry-btn">+ New Entry</button>
+</header>
+
+<main id="app-main">
+  <section id="toolbar">
+    <input id="search-input" type="text" placeholder="Search titles and notes&hellip;" autocomplete="off" aria-label="Search entries" />
+    <div id="tag-filters" aria-label="Filter by tag"></div>
+    <button id="clear-filters-btn" class="hidden">Clear filters</button>
+  </section>
+
+  <section id="entry-list" aria-live="polite">
+    <p id="empty-state" class="hidden">No entries yet. Click &ldquo;+ New Entry&rdquo; to log your first observation.</p>
+    <p id="no-results-state" class="hidden">No entries match your search/filter.</p>
+  </section>
+</main>
+
+<div id="entry-form-overlay" class="hidden">
+  <form id="entry-form">
+    <h2 id="entry-form-title">New Entry</h2>
+
+    <label for="entry-title-input">Title</label>
+    <input id="entry-title-input" type="text" required placeholder="e.g. Yeast fermentation rate vs. temperature" />
+
+    <label for="entry-date-input">Date</label>
+    <input id="entry-date-input" type="date" required />
+
+    <label for="entry-notes-input">Notes</label>
+    <textarea id="entry-notes-input" rows="10" placeholder="Observations, methods, results&hellip;"></textarea>
+
+    <label for="entry-tags-input">Tags (comma-separated)</label>
+    <input id="entry-tags-input" type="text" placeholder="e.g. microbiology, fermentation, week-3" />
+
+    <div id="entry-form-actions">
+      <button type="submit" id="entry-save-btn">Save Entry</button>
+      <button type="button" id="entry-cancel-btn">Cancel</button>
+      <button type="button" id="entry-delete-btn" class="hidden danger">Delete</button>
+    </div>
+  </form>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

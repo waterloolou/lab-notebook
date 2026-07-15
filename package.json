@@ -1,0 +1,11 @@
+{
+  "name": "digital-lab-notebook",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local dev server for the Digital Lab Notebook static web app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  }
+}
